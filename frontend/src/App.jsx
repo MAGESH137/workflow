@@ -4,7 +4,9 @@ function App() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/sample")
+    // When running via docker-compose, "backend" is the service name
+    // and is resolvable as a hostname on the Docker network.
+    fetch("http://backend:5000/api/sample")
       .then((res) => res.json())
       .then((data) => setMessage(data.message));
   }, []);
