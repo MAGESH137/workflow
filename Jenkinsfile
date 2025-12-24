@@ -24,7 +24,7 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                sh """
+                bat """
                 echo "Using PATH: \$PATH"
                 ${DOCKER} build -t ${BACKEND_IMAGE}:${TAG} backend
                 """
@@ -33,7 +33,7 @@ pipeline {
 
         stage('Build Frontend Image') {
             steps {
-                sh """
+                bat """
                 ${DOCKER} build -t ${FRONTEND_IMAGE}:${TAG} frontend
                 """
             }
@@ -41,7 +41,7 @@ pipeline {
 
         stage('Run Containers (Local)') {
             steps {
-                sh """
+                bat """
                 ${DOCKER} rm -f workflow-backend || true
                 ${DOCKER} rm -f workflow-frontend || true
 
