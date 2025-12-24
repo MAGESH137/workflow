@@ -2,6 +2,9 @@ pipeline {
     agent any
 
     environment {
+        // Explicit PATH so Jenkins can find docker & docker-credential-desktop
+        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
         DOCKER = "/usr/local/bin/docker"
 
         DOCKERHUB_USER = "magesh1307"
@@ -22,9 +25,8 @@ pipeline {
         stage('Build Backend Image') {
             steps {
                 sh """
-                ${DOCKER} build \
-                  -t ${BACKEND_IMAGE}:${TAG} \
-                  backend
+                echo "Using PATH: \$PATH"
+                ${DOCKER} build -t ${BACKEND_IMAGE}:${TAG} backend
                 """
             }
         }
@@ -32,9 +34,7 @@ pipeline {
         stage('Build Frontend Image') {
             steps {
                 sh """
-                ${DOCKER} build \
-                  -t ${FRONTEND_IMAGE}:${TAG} \
-                  frontend
+                ${DOCKER} build -t ${FRONTEND_IMAGE}:${TAG} frontend
                 """
             }
         }
@@ -61,7 +61,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ Docker images built and containers started successfully"
+            echo "✅ Docker build and run completed successfully"
         }
         failure {
             echo "❌ Pipeline failed"
