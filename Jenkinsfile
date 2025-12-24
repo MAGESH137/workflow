@@ -2,10 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Explicit PATH so Jenkins can find docker & docker-credential-desktop
-        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-
-        DOCKER = "/usr/local/bin/docker"
+        DOCKER = "docker"   // docker.exe must be in PATH
 
         DOCKERHUB_USER = "magesh1307"
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/workflow-backend"
@@ -22,38 +19,43 @@ pipeline {
             }
         }
 
+        stage('Check Docker') {
+            steps {
+                bat 'docker version'
+            }
+        }
+
         stage('Build Backend Image') {
             steps {
-                sh """
-                echo "Using PATH: \$PATH"
-                ${DOCKER} build -t ${BACKEND_IMAGE}:${TAG} backend
+                bat """
+                %DOCKER% build -t %BACKEND_IMAGE%:%TAG% backend
                 """
             }
         }
 
         stage('Build Frontend Image') {
             steps {
-                sh """
-                ${DOCKER} build -t ${FRONTEND_IMAGE}:${TAG} frontend
+                bat """
+                %DOCKER% build -t %FRONTEND_IMAGE%:%TAG% frontend
                 """
             }
         }
 
         stage('Run Containers (Local)') {
             steps {
-                sh """
-                ${DOCKER} rm -f workflow-backend || true
-                ${DOCKER} rm -f workflow-frontend || true
+                bat """
+                %DOCKER% rm -f workflow-backend || echo container not found
+                %DOCKER% rm -f workflow-frontend || echo container not found
 
-                ${DOCKER} run -d \
-                  --name workflow-backend \
-                  -p 5000:5000 \
-                  ${BACKEND_IMAGE}:${TAG}
+                %DOCKER% run -d ^
+                  --name workflow-backend ^
+                  -p 5000:5000 ^
+                  %BACKEND_IMAGE%:%TAG%
 
-                ${DOCKER} run -d \
-                  --name workflow-frontend \
-                  -p 80:80 \
-                  ${FRONTEND_IMAGE}:${TAG}
+                %DOCKER% run -d ^
+                  --name workflow-frontend ^
+                  -p 80:80 ^
+                  %FRONTEND_IMAGE%:%TAG%
                 """
             }
         }
