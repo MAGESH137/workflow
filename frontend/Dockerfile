@@ -8,9 +8,6 @@ RUN npm install
 
 COPY . .
 
-# DEBUG (optional)
-RUN npm list vite || true
-
 RUN npm run build
 
 
