@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDS = 'Sreeshma@143'
-        DOCKERHUB_USER  = 'magesh1307'
+        DOCKER = "/usr/local/bin/docker"
 
+        DOCKERHUB_USER = "magesh1307"
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/workflow-backend"
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/workflow-frontend"
 
@@ -13,7 +13,7 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 checkout scm
             }
@@ -21,55 +21,50 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                sh '''
-                docker build -t ${BACKEND_IMAGE}:${TAG} backend
-                '''
+                sh """
+                ${DOCKER} build \
+                  -t ${BACKEND_IMAGE}:${TAG} \
+                  backend
+                """
             }
         }
 
         stage('Build Frontend Image') {
             steps {
-                sh '''
-                docker build -t ${FRONTEND_IMAGE}:${TAG} frontend
-                '''
+                sh """
+                ${DOCKER} build \
+                  -t ${FRONTEND_IMAGE}:${TAG} \
+                  frontend
+                """
             }
         }
 
-        stage('Push Images') {
+        stage('Run Containers (Local)') {
             steps {
-                script {
-                    docker.withRegistry(
-                        'https://index.docker.io/v1/',
-                        DOCKERHUB_CREDS
-                    ) {
-                        docker.image("${BACKEND_IMAGE}:${TAG}").push()
-                        docker.image("${FRONTEND_IMAGE}:${TAG}").push()
-                    }
-                }
-            }
-        }
+                sh """
+                ${DOCKER} rm -f workflow-backend || true
+                ${DOCKER} rm -f workflow-frontend || true
 
-        stage('Deploy') {
-            steps {
-                sh '''
-                docker pull ${BACKEND_IMAGE}:${TAG}
-                docker pull ${FRONTEND_IMAGE}:${TAG}
-
-                docker rm -f backend || true
-                docker rm -f frontend || true
-
-                docker run -d \
-                  --name backend \
+                ${DOCKER} run -d \
+                  --name workflow-backend \
                   -p 5000:5000 \
-                  --env-file backend/.env \
                   ${BACKEND_IMAGE}:${TAG}
 
-                docker run -d \
-                  --name frontend \
+                ${DOCKER} run -d \
+                  --name workflow-frontend \
                   -p 80:80 \
                   ${FRONTEND_IMAGE}:${TAG}
-                '''
+                """
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Docker images built and containers started successfully"
+        }
+        failure {
+            echo "❌ Pipeline failed"
         }
     }
 }
