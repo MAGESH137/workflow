@@ -1,6 +1,5 @@
 name: Deploy Application
 
-# Trigger this workflow on push to main branch
 on:
   push:
     branches:
@@ -8,30 +7,21 @@ on:
 
 jobs:
   deploy:
-    # Use GitHub-hosted Ubuntu runner
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository
-      - name: Check out repository code
+      - name: Checkout code
         uses: actions/checkout@v5
 
-      # Step 2: Install dependencies (example for Node.js)
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
       - name: Install dependencies
+        working-directory: frontend
         run: npm install
 
-      # Step 3: Build the project (if applicable)
-      - name: Build project
+      - name: Build
+        working-directory: frontend
         run: npm run build
-
-      # Step 4: Deployment
-      # Replace this with your own deployment logic
-      - name: Deploy
-        run: |
-          echo "Deploying app..."
-          # Add your deployment commands here
