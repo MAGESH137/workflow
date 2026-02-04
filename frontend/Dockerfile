@@ -1,37 +1,28 @@
-# -----------------------------------
-# 1. Build Stage
-# -----------------------------------
-FROM node:18 AS builder
+# ---------- Build stage ----------
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package.json and lock files
-COPY package.json ./
-# COPY package-lock.json ./
+# Copy only package files first (cache-friendly)
+COPY package*.json ./
 
-# Install dependencies
+# IMPORTANT: install ALL deps (including devDependencies)
 RUN npm install
 
-# Copy rest of the frontend source
+# Copy rest of the source
 COPY . .
 
-# Build React app
+# Build React/Vite app
 RUN npm run build
 
 
-# -----------------------------------
-# 2. Production Stage (Nginx)
-# -----------------------------------
+# ---------- Runtime stage ----------
 FROM nginx:alpine
 
-# Remove default Nginx website
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copy built files from builder stage
+# Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose Nginx port
+# Expose port
 EXPOSE 80
 
-# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
